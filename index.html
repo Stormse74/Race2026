@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Motorsport" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Motorsportskalender 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131f;
+      --surface2: #0d0d18;
+      --border: #1e1e2e;
+      --border2: #1a1a28;
+      --text: #d8d8f0;
+      --muted: #50507a;
+      --dimmer: #30304a;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "SF Pro Display", "Inter", sans-serif;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      background: linear-gradient(180deg, #13131f 0%, #0a0a0f 100%);
+      border-bottom: 1px solid var(--border);
+      padding: max(env(safe-area-inset-top), 16px) 20px 16px;
+    }
+    .header-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fff 0%, #9090c0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-sub {
+      font-size: 12px;
+      color: var(--dimmer);
+      margin-top: 4px;
+    }
+
+    .filter-bar {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border2);
+      padding: 10px 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-pills { display: flex; gap: 7px; width: max-content; }
+
+    .pill {
+      padding: 5px 13px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--dimmer);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .month-tabs {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border2);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .month-tabs::-webkit-scrollbar { display: none; }
+    .month-tabs-inner { display: flex; width: max-content; padding: 0 20px; }
+
+    .tab {
+      padding: 12px 14px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--dimmer);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.15s;
+    }
+    .tab.active {
+      color: #b0b0ff;
+      border-bottom-color: #7070ff;
+      font-weight: 700;
+    }
+
+    .list {
+      padding: 14px 16px max(env(safe-area-inset-bottom), 40px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .race-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent, #555);
+      border-radius: 11px;
+      padding: 13px 14px 11px;
+      position: relative;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+    }
+    .race-card.highlighted {
+      border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+      background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    }
+    .race-card.expanded { background: #181828; }
+
+    .card-top {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .badge-highlight {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .race-date {
+      min-width: 68px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      padding-top: 2px;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .race-body { flex: 1; min-width: 0; }
+
+    .race-series {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    .race-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #d8d8f0;
+      line-height: 1.3;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .race-location {
+      font-size: 11px;
+      color: var(--dimmer);
+    }
+
+    /* Expand chevron */
+    .chevron {
+      position: absolute;
+      bottom: 10px;
+      right: 13px;
+      font-size: 11px;
+      color: var(--dimmer);
+      transition: transform 0.2s;
+    }
+    .race-card.expanded .chevron { transform: rotate(180deg); }
+
+    /* TV info panel */
+    .tv-panel {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border2);
+      display: none;
+      gap: 8px;
+      flex-direction: column;
+    }
+    .tv-panel.open { display: flex; }
+
+    .tv-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .tv-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      min-width: 52px;
+      flex-shrink: 0;
+    }
+    .tv-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: #b0b0d0;
+      line-height: 1.4;
+    }
+    .tv-value.time {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .tv-value.na { color: var(--dimmer); font-weight: 400; font-style: italic; }
+
+    .empty {
+      text-align: center;
+      color: var(--dimmer);
+      padding: 48px 0;
+      font-size: 14px;
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 60px 20px;
+      font-size: 14px;
+    }
+
+    .disclaimer {
+      font-size: 10px;
+      color: var(--dimmer);
+      text-align: center;
+      padding: 0 20px 20px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Resten af 2026</div>
+  <h1>Motorsportkalender</h1>
+  <div class="header-sub">Tryk på et løb for TV-tider og streaming</div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-pills" id="pills"></div>
+</div>
+
+<div class="month-tabs">
+  <div class="month-tabs-inner" id="tabs"></div>
+</div>
+
+<div class="list" id="list">
+  <div class="loading">Henter løbskalender…</div>
+</div>
+
+<div class="disclaimer" id="disclaimer" style="display:none">
+  ⚠️ TV-tider er vejledende — tjek altid din udbyder. Sendetider er dansk normaltid (CEST).
+</div>
+
+<script>
+const SERIES_CONFIG = {
+  "F1":      { color: "#e10600", label: "F1" },
+  "WEC":     { color: "#00b4d8", label: "WEC" },
+  "IMSA":    { color: "#f4a300", label: "IMSA" },
+  "IndyCar": { color: "#0a84ff", label: "IndyCar" },
+  "NASCAR":  { color: "#ffd500", label: "NASCAR" },
+  "GT3":     { color: "#30d158", label: "GT3" },
+};
+
+const MONTHS = ["Juni","Juli","August","September","Oktober","November/Dec"];
+
+function monthMatch(dato, month) {
+  const d = dato.toLowerCase();
+  if (month === "Juni")         return d.includes("jun");
+  if (month === "Juli")         return d.includes("jul");
+  if (month === "August")       return d.includes("aug");
+  if (month === "September")    return d.includes("sep");
+  if (month === "Oktober")      return d.includes("okt");
+  if (month === "November/Dec") return d.includes("nov") || d.includes("dec");
+  return false;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split("\n");
+  const raw_headers = lines[0].split(",").map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const cols = line.split(",");
+    const obj = {};
+    raw_headers.forEach((h, i) => obj[h] = (cols[i] || "").trim());
+    return obj;
+  }).filter(r => r.dato);
+}
+
+let allRaces = [];
+let activeMonth = "";
+let activeSeries = new Set(Object.keys(SERIES_CONFIG));
+let expandedIndex = null;
+
+function getInitialMonth() {
+  const m = new Date().getMonth();
+  if (m <= 5) return "Juni";
+  if (m === 6) return "Juli";
+  if (m === 7) return "August";
+  if (m === 8) return "September";
+  if (m === 9) return "Oktober";
+  return "November/Dec";
+}
+
+function renderPills() {
+  const container = document.getElementById("pills");
+  container.innerHTML = "";
+  Object.entries(SERIES_CONFIG).forEach(([key, cfg]) => {
+    const btn = document.createElement("button");
+    btn.className = "pill" + (activeSeries.has(key) ? " active" : "");
+    btn.textContent = cfg.label;
+    if (activeSeries.has(key)) {
+      btn.style.borderColor = cfg.color;
+      btn.style.color = cfg.color;
+      btn.style.background = cfg.color + "22";
+    }
+    btn.onclick = () => {
+      if (activeSeries.has(key)) {
+        if (activeSeries.size > 1) activeSeries.delete(key);
+      } else {
+        activeSeries.add(key);
+      }
+      expandedIndex = null;
+      renderPills();
+      renderList();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function renderTabs() {
+  const container = document.getElementById("tabs");
+  container.innerHTML = "";
+  MONTHS.forEach(m => {
+    const btn = document.createElement("button");
+    btn.className = "tab" + (activeMonth === m ? " active" : "");
+    btn.textContent = m;
+    btn.onclick = () => {
+      activeMonth = m;
+      expandedIndex = null;
+      renderTabs();
+      renderList();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function tvRow(label, value, extraClass) {
+  const cls = value === "TBA" || value === "—" ? "na" : (extraClass || "");
+  return `<div class="tv-row">
+    <span class="tv-label">${label}</span>
+    <span class="tv-value ${cls}">${value || "—"}</span>
+  </div>`;
+}
+
+function renderList() {
+  const container = document.getElementById("list");
+  const filtered = allRaces.filter(r =>
+    monthMatch(r.dato, activeMonth) && activeSeries.has(r.serie)
+  );
+
+  document.getElementById("disclaimer").style.display = filtered.length ? "block" : "none";
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty">Ingen løb valgt for denne måned.</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map((r, i) => {
+    const cfg = SERIES_CONFIG[r.serie] || { color: "#888", label: r.serie };
+    const isHighlight = r.highlight && r.highlight.trim() !== "";
+    const isExpanded = expandedIndex === i;
+    const hasTv = r.tv_dk && r.tv_dk !== "—" && r.tv_dk !== "";
+    const hasStream = r.stream_dk && r.stream_dk !== "—" && r.stream_dk !== "";
+
+    return `
+      <div class="race-card${isHighlight ? " highlighted" : ""}${isExpanded ? " expanded" : ""}"
+           style="--accent:${cfg.color}"
+           onclick="toggleCard(${i})">
+        ${isHighlight ? `<div class="badge-highlight">★ Dansk</div>` : ""}
+        <div class="card-top">
+          <div class="race-date">${r.dato}</div>
+          <div class="race-body">
+            <div class="race-series">${cfg.label}</div>
+            <div class="race-name" title="${r.event}">${r.event}</div>
+            <div class="race-location">📍 ${r.lokation}</div>
+          </div>
+        </div>
+        <div class="tv-panel${isExpanded ? " open" : ""}">
+          ${tvRow("🕐 Tid", r.dansk_tid || "TBA", "time")}
+          ${tvRow("📺 TV", hasTv ? r.tv_dk : "—")}
+          ${tvRow("📱 Stream", hasStream ? r.stream_dk : "—")}
+        </div>
+        <div class="chevron">▾</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function toggleCard(i) {
+  expandedIndex = expandedIndex === i ? null : i;
+  renderList();
+}
+
+async function init() {
+  try {
+    const res = await fetch("races.csv?v=" + Date.now());
+    const text = await res.text();
+    allRaces = parseCSV(text);
+    activeMonth = getInitialMonth();
+    renderPills();
+    renderTabs();
+    renderList();
+  } catch (e) {
+    document.getElementById("list").innerHTML =
+      '<div class="empty">Kunne ikke hente løbsdata. Prøv igen.</div>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
