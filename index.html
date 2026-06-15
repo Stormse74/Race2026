@@ -1,491 +1,985 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Motorsport" />
-  <meta name="theme-color" content="#0a0a0f" />
-  <link rel="manifest" href="manifest.json" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Dansk motorsportskalender for F1, WEC, IMSA, IndyCar, NASCAR og GT3.">
   <title>Motorsportskalender 2026</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f4f7fb'/%3E%3Cpath d='M14 42 25 20h12L26 42H14Zm18 0 11-22h7L39 42h-7Z' fill='%23e10600'/%3E%3C/svg%3E">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0a0a0f;
-      --surface: #13131f;
-      --surface2: #0d0d18;
-      --border: #1e1e2e;
-      --border2: #1a1a28;
-      --text: #d8d8f0;
-      --muted: #9a9ac0;
-      --dimmer: #8a8ab0;
+      --bg: #08101d;
+      --bg-deep: #050a12;
+      --surface: #f5f7fa;
+      --surface-strong: #ffffff;
+      --text: #101827;
+      --muted: #667085;
+      --line: #dfe4eb;
+      --on-dark: #f8fafc;
+      --on-dark-muted: #a8b3c4;
+      --accent: #ff3b30;
+      --f1: #e10600;
+      --wec: #007fa8;
+      --imsa: #e76819;
+      --indycar: #1261c9;
+      --nascar: #f0bd00;
+      --gt3: #14804a;
+      --shadow: 0 18px 60px rgba(0, 0, 0, .22);
+      --radius: 24px;
     }
 
-    html, body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, "SF Pro Display", "Inter", sans-serif;
-      min-height: 100dvh;
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 85% -10%, rgba(40, 88, 160, .24), transparent 34rem),
+        linear-gradient(180deg, #0d1728 0, var(--bg) 34rem, var(--bg-deep) 100%);
+      color: var(--on-dark);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
-    .header {
-      background: linear-gradient(180deg, #13131f 0%, #0a0a0f 100%);
-      border-bottom: 1px solid var(--border);
-      padding: max(env(safe-area-inset-top), 16px) 20px 16px;
-    }
-    .header-eyebrow {
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      color: var(--muted);
-      text-transform: uppercase;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .header h1 {
-      font-size: clamp(30px, 4vw, 38px);
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      background: linear-gradient(90deg, #fff 0%, #9090c0 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .header-sub {
-      font-size: clamp(14px, 1.4vw, 16px);
-      color: var(--dimmer);
-      margin-top: 4px;
+    button {
+      font: inherit;
     }
 
-    .filter-bar {
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border2);
-      padding: 10px 20px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .filter-bar::-webkit-scrollbar { display: none; }
-    .filter-pills { display: flex; gap: 7px; width: max-content; }
-
-    .pill {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 1.5px solid var(--border);
-      background: transparent;
-      color: var(--dimmer);
-      font-size: clamp(13px, 1.2vw, 15px);
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: all 0.15s;
-      white-space: nowrap;
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 12px;
+      left: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #fff;
+      color: #111827;
+      transform: translateY(-150%);
     }
 
-    .month-tabs {
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border2);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .month-tabs::-webkit-scrollbar { display: none; }
-    .month-tabs-inner { display: flex; width: max-content; padding: 0 20px; }
-
-    .tab {
-      padding: 12px 14px;
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--dimmer);
-      font-size: clamp(15px, 1.4vw, 17px);
-      font-weight: 500;
-      cursor: pointer;
-      white-space: nowrap;
-      -webkit-tap-highlight-color: transparent;
-      transition: color 0.15s;
-    }
-    .tab.active {
-      color: #b0b0ff;
-      border-bottom-color: #7070ff;
-      font-weight: 700;
+    .skip-link:focus {
+      transform: translateY(0);
     }
 
-    .list {
-      padding: 14px 16px max(env(safe-area-inset-bottom), 40px);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-width: 1000px;
+    .app {
+      width: min(100% - 28px, 1100px);
       margin: 0 auto;
+      padding: max(28px, env(safe-area-inset-top)) 0 max(70px, env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: clamp(42px, 8vw, 84px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--on-dark);
+      font-size: .78rem;
+      font-weight: 850;
+      letter-spacing: .13em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 11px;
+      background: var(--surface-strong);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+    }
+
+    .brand-mark svg {
+      width: 23px;
+      height: 23px;
+    }
+
+    .season-pill {
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .07);
+      color: #d9e0ea;
+      font-size: .75rem;
+      font-weight: 750;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      max-width: 850px;
+      margin-bottom: clamp(38px, 7vw, 70px);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      color: #aebed4;
+      font-size: clamp(.75rem, 1.5vw, .86rem);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 28px;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--accent);
+      content: "";
+    }
+
+    h1 {
+      max-width: 790px;
+      margin: 0;
+      font-size: clamp(2.65rem, 8.5vw, 6.35rem);
+      font-weight: 850;
+      letter-spacing: -.065em;
+      line-height: .94;
+    }
+
+    .hero-copy {
+      max-width: 650px;
+      margin: 22px 0 0;
+      color: var(--on-dark-muted);
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.65;
+    }
+
+    .controls {
+      display: grid;
+      gap: 26px;
+      margin-bottom: 34px;
+    }
+
+    .filter-group {
+      min-width: 0;
+    }
+
+    .filter-heading {
+      margin: 0 0 11px;
+      color: #8f9db0;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .filter-scroll {
+      display: flex;
+      gap: 9px;
+      margin-inline: -14px;
+      padding: 2px 14px 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-btn {
+      position: relative;
+      flex: 0 0 auto;
+      min-height: 48px;
+      padding: 0 18px;
+      border: 1px solid rgba(255, 255, 255, .13);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .055);
+      color: #d5dce7;
+      cursor: pointer;
+      font-size: .91rem;
+      font-weight: 760;
+      transition: border-color .2s ease, background .2s ease, color .2s ease, transform .2s ease;
+    }
+
+    .filter-btn:hover {
+      border-color: rgba(255, 255, 255, .3);
+      background: rgba(255, 255, 255, .1);
+    }
+
+    .filter-btn:active {
+      transform: scale(.98);
+    }
+
+    .filter-btn[aria-pressed="true"] {
+      border-color: #fff;
+      background: var(--surface-strong);
+      color: #111827;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+    }
+
+    .filter-btn.series-filter[aria-pressed="true"]::before {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: var(--series-color, var(--accent));
+      content: "";
+      vertical-align: 1px;
+    }
+
+    .results-bar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 0 2px 16px;
+    }
+
+    .results-title {
+      margin: 0;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      letter-spacing: -.035em;
+    }
+
+    .results-count {
+      margin: 0;
+      color: #9eabbc;
+      font-size: .9rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .race-list {
+      display: grid;
+      gap: clamp(14px, 2.5vw, 22px);
     }
 
     .race-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent, #555);
-      border-radius: 11px;
-      padding: 13px 14px 11px;
+      --series-color: var(--accent);
       position: relative;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: background 0.15s;
-    }
-    .race-card.highlighted {
-      border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-      background: color-mix(in srgb, var(--accent) 6%, var(--surface));
-    }
-    .race-card.expanded { background: #181828; }
-
-    .card-top {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      animation: card-in .48s both;
     }
 
-    .badge-highlight {
+    .race-card::before {
       position: absolute;
-      top: 10px;
-      right: 12px;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 18%, transparent);
-      padding: 2px 8px;
-      border-radius: 10px;
-      text-transform: uppercase;
+      z-index: 2;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: var(--series-color);
+      content: "";
     }
 
-    .race-date {
-      min-width: 90px;
-      font-size: clamp(14px, 1.4vw, 17px);
-      font-weight: 700;
+    .race-card.is-highlight {
+      background:
+        linear-gradient(135deg, rgba(255, 198, 0, .1), transparent 46%),
+        var(--surface-strong);
+      box-shadow: 0 0 0 1px rgba(255, 198, 0, .34), var(--shadow);
+    }
+
+    .race-toggle {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr) 42px;
+      gap: clamp(14px, 3vw, 28px);
+      width: 100%;
+      min-height: 164px;
+      padding: clamp(21px, 4vw, 34px) clamp(18px, 4vw, 34px) clamp(21px, 4vw, 34px) clamp(22px, 4.5vw, 40px);
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .race-toggle:focus-visible,
+    .filter-btn:focus-visible {
+      outline: 3px solid #70b7ff;
+      outline-offset: 3px;
+    }
+
+    .date-block {
+      align-self: center;
+      padding-right: 14px;
+      border-right: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .date-day {
+      display: block;
+      font-size: clamp(1.55rem, 5vw, 2.6rem);
+      font-weight: 870;
+      letter-spacing: -.055em;
+      line-height: .95;
+    }
+
+    .date-month {
+      display: block;
+      margin-top: 8px;
       color: var(--muted);
-      padding-top: 2px;
-      line-height: 1.4;
-      flex-shrink: 0;
+      font-size: clamp(.69rem, 1.5vw, .78rem);
+      font-weight: 850;
+      letter-spacing: .13em;
+      line-height: 1.1;
+      text-transform: uppercase;
     }
 
-    .race-body { flex: 1; min-width: 0; }
+    .race-main {
+      align-self: center;
+      min-width: 0;
+    }
 
-    .race-series {
-      font-size: clamp(12px, 1vw, 14px);
-      font-weight: 800;
-      letter-spacing: 0.1em;
+    .race-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .series-badge,
+    .focus-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 25px;
+      padding: 4px 9px;
+      border-radius: 7px;
+      font-size: .68rem;
+      font-weight: 850;
+      letter-spacing: .08em;
+      line-height: 1;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 2px;
+    }
+
+    .series-badge {
+      background: var(--series-color);
+      color: #fff;
+    }
+
+    .race-card[data-series="NASCAR"] .series-badge {
+      color: #1b1b12;
+    }
+
+    .focus-badge {
+      gap: 5px;
+      background: #fff0b8;
+      color: #714f00;
     }
 
     .race-name {
-      font-size: clamp(18px, 2vw, 24px);
-      font-weight: 700;
-      color: #d8d8f0;
-      line-height: 1.3;
-      margin-bottom: 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin: 0;
+      font-size: clamp(1.25rem, 3.8vw, 2rem);
+      font-weight: 830;
+      letter-spacing: -.037em;
+      line-height: 1.08;
+      text-wrap: balance;
     }
 
-    .race-location {
-      font-size: clamp(14px, 1.4vw, 17px);
-      color: #c0c0df;
-    }
-
-    /* Expand chevron */
-    .chevron {
-      position: absolute;
-      bottom: 10px;
-      right: 13px;
-      font-size: 11px;
-      color: var(--dimmer);
-      transition: transform 0.2s;
-    }
-    .race-card.expanded .chevron { transform: rotate(180deg); }
-
-    /* TV info panel */
-    .tv-panel {
-      display: none;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border2);
-      display: none;
-      gap: 8px;
-      flex-direction: column;
-    }
-    .tv-panel.open { display: flex; }
-
-    .tv-row {
+    .location {
       display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-    .tv-label {
-      font-size: clamp(12px, 1vw, 14px);
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      align-items: center;
+      gap: 7px;
+      margin: 10px 0 0;
       color: var(--muted);
-      min-width: 52px;
-      flex-shrink: 0;
-    }
-    .tv-value {
-      font-size: clamp(15px, 1.5vw, 18px);
-      font-weight: 600;
-      color: #b0b0d0;
+      font-size: clamp(.86rem, 1.8vw, 1rem);
+      font-weight: 560;
       line-height: 1.4;
     }
-    .tv-value.time {
-      font-size: clamp(18px, 2vw, 22px);
+
+    .location svg {
+      flex: 0 0 auto;
+      width: 15px;
+      height: 15px;
+    }
+
+    .chevron {
+      display: grid;
+      align-self: center;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .28s ease, background .2s ease;
+    }
+
+    .race-toggle:hover .chevron {
+      background: #eef1f5;
+    }
+
+    .chevron svg {
+      width: 17px;
+      transition: transform .28s ease;
+    }
+
+    .race-toggle[aria-expanded="true"] .chevron svg {
+      transform: rotate(180deg);
+    }
+
+    .race-details {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows .3s ease;
+    }
+
+    .race-card.is-open .race-details {
+      grid-template-rows: 1fr;
+    }
+
+    .details-inner {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      margin: 0 clamp(18px, 4vw, 34px) clamp(18px, 4vw, 30px) clamp(22px, 4.5vw, 40px);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--line);
+    }
+
+    .detail {
+      min-width: 0;
+      padding: clamp(16px, 3vw, 22px);
+      background: #fff;
+    }
+
+    .detail-label {
+      display: block;
+      margin-bottom: 7px;
+      color: #7b8493;
+      font-size: .66rem;
+      font-weight: 820;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      display: block;
+      overflow-wrap: anywhere;
+      font-size: clamp(.9rem, 2vw, 1.04rem);
+      font-weight: 740;
+      line-height: 1.35;
+    }
+
+    .status-card {
+      display: grid;
+      min-height: 230px;
+      place-items: center;
+      padding: 34px 22px;
+      border: 1px solid rgba(255, 255, 255, .11);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .055);
+      color: #c6d0dd;
+      text-align: center;
+    }
+
+    .status-card strong {
+      display: block;
+      margin-bottom: 7px;
+      color: #fff;
+      font-size: clamp(1.18rem, 3vw, 1.55rem);
+    }
+
+    .status-card p {
+      max-width: 520px;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .retry-btn {
+      min-height: 46px;
+      margin-top: 18px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 12px;
+      background: #fff;
+      color: #111827;
+      cursor: pointer;
       font-weight: 800;
-      color: var(--accent);
-      font-variant-numeric: tabular-nums;
     }
-    .tv-value.na { color: var(--dimmer); font-weight: 400; font-style: italic; }
 
-    .empty {
+    .loading-bars {
+      display: grid;
+      width: min(100%, 380px);
+      gap: 10px;
+    }
+
+    .loading-bars span {
+      height: 14px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, rgba(255,255,255,.07), rgba(255,255,255,.2), rgba(255,255,255,.07));
+      background-size: 220% 100%;
+      animation: shimmer 1.25s infinite linear;
+    }
+
+    .loading-bars span:nth-child(2) {
+      width: 72%;
+    }
+
+    footer {
+      margin-top: 44px;
+      color: #738196;
+      font-size: .78rem;
+      line-height: 1.6;
       text-align: center;
-      color: var(--dimmer);
-      padding: 48px 0;
-      font-size: clamp(15px, 1.5vw, 18px);
     }
 
-    .loading {
-      text-align: center;
-      color: var(--muted);
-      padding: 60px 20px;
-      font-size: clamp(15px, 1.5vw, 18px);
+    @keyframes shimmer {
+      to { background-position: -220% 0; }
     }
 
-    .disclaimer {
-      font-size: clamp(12px, 1vw, 14px);
-      color: var(--dimmer);
-      text-align: center;
-      padding: 0 20px 20px;
-      line-height: 1.5;
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    @media (min-width: 900px) {
-      .race-card {
-        padding: 18px 20px;
+    @media (min-width: 760px) {
+      .app {
+        width: min(100% - 64px, 1100px);
+        padding-top: 40px;
       }
 
-      .card-top {
-        gap: 18px;
+      .controls {
+        grid-template-columns: 1.15fr .85fr;
+        align-items: end;
       }
 
-      .race-date {
-        min-width: 110px;
+      .filter-scroll {
+        margin-inline: 0;
+        padding-inline: 0;
       }
 
-      .header {
-        padding-left: 30px;
-        padding-right: 30px;
+      .race-toggle {
+        grid-template-columns: 116px minmax(0, 1fr) 46px;
       }
 
-      .filter-bar,
-      .month-tabs {
-        padding-left: 30px;
-        padding-right: 30px;
+      .date-block {
+        padding-right: 26px;
       }
     }
 
+    @media (max-width: 580px) {
+      .app {
+        width: min(100% - 20px, 1100px);
+      }
+
+      .topbar {
+        margin-inline: 4px;
+      }
+
+      .brand-text {
+        display: none;
+      }
+
+      .race-toggle {
+        grid-template-columns: 65px minmax(0, 1fr) 28px;
+        gap: 12px;
+      }
+
+      .date-block {
+        padding-right: 10px;
+      }
+
+      .chevron {
+        width: 28px;
+        height: 28px;
+      }
+
+      .chevron svg {
+        width: 14px;
+      }
+
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#race-list">Gå til løb</a>
 
-<div class="header">
-  <div class="header-eyebrow">Resten af 2026</div>
-  <h1>Motorsportkalender</h1>
-  <div class="header-sub">Tryk på et løb for TV-tider og streaming</div>
-</div>
+  <main class="app">
+    <header>
+      <div class="topbar">
+        <div class="brand" aria-label="Motorsportskalender">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M5 23.5 12.8 8h8.4l-7.8 15.5H5Z" fill="#E10600"/>
+              <path d="M17 23.5 24.8 8H29l-7.8 15.5H17Z" fill="#101827"/>
+            </svg>
+          </span>
+          <span class="brand-text">Motorsportskalender</span>
+        </div>
+        <span class="season-pill">Sæson 2026</span>
+      </div>
 
-<div class="filter-bar">
-  <div class="filter-pills" id="pills"></div>
-</div>
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Danske sendetider</p>
+        <h1 id="page-title">Næste stop:<br>fuld fart.</h1>
+        <p class="hero-copy">
+          Din samlede kalender til de største løbsserier — med tider, TV og streaming samlet ét sted.
+        </p>
+      </section>
+    </header>
 
-<div class="month-tabs">
-  <div class="month-tabs-inner" id="tabs"></div>
-</div>
+    <section class="controls" aria-label="Filtrer kalenderen">
+      <div class="filter-group">
+        <p class="filter-heading">Serie</p>
+        <div class="filter-scroll" id="series-filters" role="group" aria-label="Vælg serie"></div>
+      </div>
+      <div class="filter-group">
+        <p class="filter-heading">Måned</p>
+        <div class="filter-scroll" id="month-filters" role="group" aria-label="Vælg måned"></div>
+      </div>
+    </section>
 
-<div class="list" id="list">
-  <div class="loading">Henter løbskalender…</div>
-</div>
-
-<div class="disclaimer" id="disclaimer" style="display:none">
-  ⚠️ TV-tider er vejledende — tjek altid din udbyder. Sendetider er dansk normaltid (CEST).
-</div>
-
-<script>
-const SERIES_CONFIG = {
-  "F1":      { color: "#e10600", label: "F1" },
-  "WEC":     { color: "#00b4d8", label: "WEC" },
-  "IMSA":    { color: "#f4a300", label: "IMSA" },
-  "IndyCar": { color: "#0a84ff", label: "IndyCar" },
-  "NASCAR":  { color: "#ffd500", label: "NASCAR" },
-  "GT3":     { color: "#30d158", label: "GT3" },
-};
-
-const MONTHS = ["Juni","Juli","August","September","Oktober","November/Dec"];
-
-function monthMatch(dato, month) {
-  const d = dato.toLowerCase();
-  if (month === "Juni")         return d.includes("jun");
-  if (month === "Juli")         return d.includes("jul");
-  if (month === "August")       return d.includes("aug");
-  if (month === "September")    return d.includes("sep");
-  if (month === "Oktober")      return d.includes("okt");
-  if (month === "November/Dec") return d.includes("nov") || d.includes("dec");
-  return false;
-}
-
-function parseCSV(text) {
-  const lines = text.trim().split("\n");
-  const raw_headers = lines[0].split(",").map(h => h.trim());
-  return lines.slice(1).map(line => {
-    const cols = line.split(",");
-    const obj = {};
-    raw_headers.forEach((h, i) => obj[h] = (cols[i] || "").trim());
-    return obj;
-  }).filter(r => r.dato);
-}
-
-let allRaces = [];
-let activeMonth = "";
-let activeSeries = new Set(Object.keys(SERIES_CONFIG));
-let expandedIndex = null;
-
-function getInitialMonth() {
-  const m = new Date().getMonth();
-  if (m <= 5) return "Juni";
-  if (m === 6) return "Juli";
-  if (m === 7) return "August";
-  if (m === 8) return "September";
-  if (m === 9) return "Oktober";
-  return "November/Dec";
-}
-
-function renderPills() {
-  const container = document.getElementById("pills");
-  container.innerHTML = "";
-  Object.entries(SERIES_CONFIG).forEach(([key, cfg]) => {
-    const btn = document.createElement("button");
-    btn.className = "pill" + (activeSeries.has(key) ? " active" : "");
-    btn.textContent = cfg.label;
-    if (activeSeries.has(key)) {
-      btn.style.borderColor = cfg.color;
-      btn.style.color = cfg.color;
-      btn.style.background = cfg.color + "22";
-    }
-    btn.onclick = () => {
-      if (activeSeries.has(key)) {
-        if (activeSeries.size > 1) activeSeries.delete(key);
-      } else {
-        activeSeries.add(key);
-      }
-      expandedIndex = null;
-      renderPills();
-      renderList();
-    };
-    container.appendChild(btn);
-  });
-}
-
-function renderTabs() {
-  const container = document.getElementById("tabs");
-  container.innerHTML = "";
-  MONTHS.forEach(m => {
-    const btn = document.createElement("button");
-    btn.className = "tab" + (activeMonth === m ? " active" : "");
-    btn.textContent = m;
-    btn.onclick = () => {
-      activeMonth = m;
-      expandedIndex = null;
-      renderTabs();
-      renderList();
-    };
-    container.appendChild(btn);
-  });
-}
-
-function tvRow(label, value, extraClass) {
-  const cls = value === "TBA" || value === "—" ? "na" : (extraClass || "");
-  return `<div class="tv-row">
-    <span class="tv-label">${label}</span>
-    <span class="tv-value ${cls}">${value || "—"}</span>
-  </div>`;
-}
-
-function renderList() {
-  const container = document.getElementById("list");
-  const filtered = allRaces.filter(r =>
-    monthMatch(r.dato, activeMonth) && activeSeries.has(r.serie)
-  );
-
-  document.getElementById("disclaimer").style.display = filtered.length ? "block" : "none";
-
-  if (filtered.length === 0) {
-    container.innerHTML = '<div class="empty">Ingen løb valgt for denne måned.</div>';
-    return;
-  }
-
-  container.innerHTML = filtered.map((r, i) => {
-    const cfg = SERIES_CONFIG[r.serie] || { color: "#888", label: r.serie };
-    const isHighlight = r.highlight && r.highlight.trim() !== "";
-    const isExpanded = expandedIndex === i;
-    const hasTv = r.tv_dk && r.tv_dk !== "—" && r.tv_dk !== "";
-    const hasStream = r.stream_dk && r.stream_dk !== "—" && r.stream_dk !== "";
-
-    return `
-      <div class="race-card${isHighlight ? " highlighted" : ""}${isExpanded ? " expanded" : ""}"
-           style="--accent:${cfg.color}"
-           onclick="toggleCard(${i})">
-        ${isHighlight ? `<div class="badge-highlight">★ Dansk</div>` : ""}
-        <div class="card-top">
-          <div class="race-date">${r.dato}</div>
-          <div class="race-body">
-            <div class="race-series">${cfg.label}</div>
-            <div class="race-name" title="${r.event}">${r.event}</div>
-            <div class="race-location">📍 ${r.lokation}</div>
+    <section aria-labelledby="results-heading">
+      <div class="results-bar">
+        <h2 class="results-title" id="results-heading">Alle løb</h2>
+        <p class="results-count" id="results-count" aria-live="polite"></p>
+      </div>
+      <div class="race-list" id="race-list" aria-live="polite" aria-busy="true">
+        <div class="status-card">
+          <div class="loading-bars" aria-label="Henter løbskalender">
+            <span></span><span></span><span></span>
           </div>
         </div>
-        <div class="tv-panel${isExpanded ? " open" : ""}">
-          ${tvRow("🕐 Tid", r.dansk_tid || "TBA", "time")}
-          ${tvRow("📺 TV", hasTv ? r.tv_dk : "—")}
-          ${tvRow("📱 Stream", hasStream ? r.stream_dk : "—")}
-        </div>
-        <div class="chevron">▾</div>
       </div>
-    `;
-  }).join("");
-}
+    </section>
 
-function toggleCard(i) {
-  expandedIndex = expandedIndex === i ? null : i;
-  renderList();
-}
+    <footer>
+      Tider og kanaler kan ændres. Kontrollér altid hos den officielle udbyder tæt på løbsstart.
+    </footer>
+  </main>
 
-async function init() {
-  try {
-    const res = await fetch("races.csv?v=" + Date.now());
-    const text = await res.text();
-    allRaces = parseCSV(text);
-    activeMonth = getInitialMonth();
-    renderPills();
-    renderTabs();
-    renderList();
-  } catch (e) {
-    document.getElementById("list").innerHTML =
-      '<div class="empty">Kunne ikke hente løbsdata. Prøv igen.</div>';
-  }
-}
+  <script>
+    (() => {
+      "use strict";
 
-init();
-</script>
+      const SERIES = ["F1", "WEC", "IMSA", "IndyCar", "NASCAR", "GT3"];
+      const SERIES_COLORS = {
+        F1: "#e10600",
+        WEC: "#007fa8",
+        IMSA: "#e76819",
+        IndyCar: "#1261c9",
+        NASCAR: "#f0bd00",
+        GT3: "#14804a"
+      };
+      const MONTHS = [
+        ["jan", "Januar"], ["feb", "Februar"], ["mar", "Marts"],
+        ["apr", "April"], ["maj", "Maj"], ["jun", "Juni"],
+        ["jul", "Juli"], ["aug", "August"], ["sep", "September"],
+        ["okt", "Oktober"], ["nov", "November"], ["dec", "December"]
+      ];
+
+      const state = {
+        races: [],
+        series: "Alle",
+        month: "Alle"
+      };
+
+      const list = document.querySelector("#race-list");
+      const count = document.querySelector("#results-count");
+      const heading = document.querySelector("#results-heading");
+      const seriesFilters = document.querySelector("#series-filters");
+      const monthFilters = document.querySelector("#month-filters");
+
+      // State-machine parser: handles commas, line breaks and escaped quotes inside quoted fields.
+      function parseCSV(text) {
+        const rows = [];
+        let row = [];
+        let field = "";
+        let quoted = false;
+
+        text = text.replace(/^\uFEFF/, "");
+
+        for (let i = 0; i < text.length; i += 1) {
+          const char = text[i];
+          const next = text[i + 1];
+
+          if (char === '"') {
+            if (quoted && next === '"') {
+              field += '"';
+              i += 1;
+            } else {
+              quoted = !quoted;
+            }
+          } else if (char === "," && !quoted) {
+            row.push(field.trim());
+            field = "";
+          } else if ((char === "\n" || char === "\r") && !quoted) {
+            if (char === "\r" && next === "\n") i += 1;
+            row.push(field.trim());
+            if (row.some(cell => cell !== "")) rows.push(row);
+            row = [];
+            field = "";
+          } else {
+            field += char;
+          }
+        }
+
+        row.push(field.trim());
+        if (row.some(cell => cell !== "")) rows.push(row);
+        if (quoted) throw new Error("CSV-filen indeholder et felt med manglende afsluttende citationstegn.");
+        if (rows.length < 2) throw new Error("CSV-filen indeholder ingen løb.");
+
+        const headers = rows.shift().map(header => header.trim().toLowerCase());
+        const required = ["dato", "serie", "event", "lokation", "dansk_tid", "tv_dk", "stream_dk", "highlight"];
+        const missing = required.filter(header => !headers.includes(header));
+        if (missing.length) throw new Error(`CSV-filen mangler kolonner: ${missing.join(", ")}`);
+
+        return rows.map((cells, index) => {
+          const race = {};
+          headers.forEach((header, column) => {
+            race[header] = (cells[column] || "").trim();
+          });
+          race.id = `race-${index + 1}`;
+          race.months = getRaceMonths(race.dato);
+          return race;
+        }).filter(race => race.dato && race.serie && race.event);
+      }
+
+      function getRaceMonths(dateText) {
+        const normalized = dateText.toLocaleLowerCase("da-DK");
+        return MONTHS.filter(([short]) => new RegExp(`\\b${short}\\b`, "i").test(normalized))
+          .map(([short]) => short);
+      }
+
+      function formatDate(dateText) {
+        const normalized = dateText.replace(/\.\s*/g, ". ").trim();
+        const foundMonths = getRaceMonths(normalized);
+        const monthLabel = foundMonths.map(month => month.toUpperCase()).join("–") || "DATO";
+        const dayLabel = normalized
+          .replace(new RegExp(`\\.?\\s*(${MONTHS.map(([short]) => short).join("|")})\\b`, "gi"), "")
+          .replace(/\s*-\s*/g, "–")
+          .replace(/\s+/g, " ")
+          .replace(/\.$/, "")
+          .trim();
+        return { day: dayLabel || "—", month: monthLabel };
+      }
+
+      function displayValue(value, type) {
+        const clean = (value || "").trim();
+        if (type === "time" && (!clean || /^tba$/i.test(clean))) return "TBA";
+        if (!clean || clean === "—" || clean === "-") return "Ikke oplyst";
+        return clean;
+      }
+
+      function escapeHTML(value) {
+        return String(value).replace(/[&<>"']/g, char => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+        })[char]);
+      }
+
+      function makeButton(label, value, type, active, color) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `filter-btn ${type}-filter`;
+        button.textContent = label;
+        button.dataset.value = value;
+        button.setAttribute("aria-pressed", String(active));
+        if (color) button.style.setProperty("--series-color", color);
+        return button;
+      }
+
+      function renderFilters() {
+        seriesFilters.replaceChildren(
+          makeButton("Alle", "Alle", "series", state.series === "Alle"),
+          ...SERIES.map(series => makeButton(
+            series, series, "series", state.series === series, SERIES_COLORS[series]
+          ))
+        );
+
+        const available = new Set(state.races.flatMap(race => race.months));
+        const monthButtons = MONTHS
+          .filter(([short]) => available.has(short))
+          .map(([short, full]) => makeButton(full, short, "month", state.month === short));
+        monthFilters.replaceChildren(
+          makeButton("Alle", "Alle", "month", state.month === "Alle"),
+          ...monthButtons
+        );
+      }
+
+      function raceCard(race, index) {
+        const date = formatDate(race.dato);
+        const highlighted = race.highlight.includes("★");
+        const color = SERIES_COLORS[race.serie] || "#596579";
+        const article = document.createElement("article");
+        article.className = `race-card${highlighted ? " is-highlight" : ""}`;
+        article.dataset.series = race.serie;
+        article.style.setProperty("--series-color", color);
+        article.style.animationDelay = `${Math.min(index * 45, 360)}ms`;
+
+        article.innerHTML = `
+          <button class="race-toggle" type="button" aria-expanded="false" aria-controls="${race.id}-details">
+            <span class="date-block" aria-label="${escapeHTML(race.dato)}">
+              <span class="date-day">${escapeHTML(date.day)}</span>
+              <span class="date-month">${escapeHTML(date.month)}</span>
+            </span>
+            <span class="race-main">
+              <span class="race-meta">
+                <span class="series-badge">${escapeHTML(race.serie)}</span>
+                ${highlighted ? '<span class="focus-badge"><span aria-hidden="true">★</span> Dansk fokus</span>' : ""}
+              </span>
+              <span class="race-name">${escapeHTML(race.event)}</span>
+              <span class="location">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M10 18s6-5.32 6-11A6 6 0 1 0 4 7c0 5.68 6 11 6 11Z" stroke="currentColor" stroke-width="1.7"/>
+                  <circle cx="10" cy="7" r="2.2" stroke="currentColor" stroke-width="1.7"/>
+                </svg>
+                ${escapeHTML(race.lokation || "Lokation ikke oplyst")}
+              </span>
+            </span>
+            <span class="chevron" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none">
+                <path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <div class="race-details" id="${race.id}-details">
+            <div class="details-inner">
+              <div class="details-grid">
+                <div class="detail">
+                  <span class="detail-label">Dansk sendetid</span>
+                  <span class="detail-value">${escapeHTML(displayValue(race.dansk_tid, "time"))}</span>
+                </div>
+                <div class="detail">
+                  <span class="detail-label">TV-kanal</span>
+                  <span class="detail-value">${escapeHTML(displayValue(race.tv_dk))}</span>
+                </div>
+                <div class="detail">
+                  <span class="detail-label">Streaming</span>
+                  <span class="detail-value">${escapeHTML(displayValue(race.stream_dk))}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        return article;
+      }
+
+      function renderRaces() {
+        const filtered = state.races.filter(race => {
+          const seriesMatch = state.series === "Alle" || race.serie === state.series;
+          const monthMatch = state.month === "Alle" || race.months.includes(state.month);
+          return seriesMatch && monthMatch;
+        });
+
+        const selectedMonth = MONTHS.find(([short]) => short === state.month)?.[1];
+        heading.textContent = state.series === "Alle" ? "Alle løb" : state.series;
+        if (selectedMonth) heading.textContent += ` · ${selectedMonth}`;
+        count.textContent = `${filtered.length} ${filtered.length === 1 ? "løb" : "løb"}`;
+
+        if (!filtered.length) {
+          list.innerHTML = `
+            <div class="status-card">
+              <div>
+                <strong>Ingen løb fundet</strong>
+                <p>Prøv en anden kombination af serie og måned.</p>
+              </div>
+            </div>`;
+          return;
+        }
+
+        list.replaceChildren(...filtered.map(raceCard));
+      }
+
+      function setFilter(type, value) {
+        state[type] = value;
+        renderFilters();
+        renderRaces();
+      }
+
+      seriesFilters.addEventListener("click", event => {
+        const button = event.target.closest("button[data-value]");
+        if (button) setFilter("series", button.dataset.value);
+      });
+
+      monthFilters.addEventListener("click", event => {
+        const button = event.target.closest("button[data-value]");
+        if (button) setFilter("month", button.dataset.value);
+      });
+
+      list.addEventListener("click", event => {
+        const toggle = event.target.closest(".race-toggle");
+        if (!toggle) return;
+        const card = toggle.closest(".race-card");
+        const isOpen = card.classList.toggle("is-open");
+        toggle.setAttribute("aria-expanded", String(isOpen));
+      });
+
+      async function loadRaces() {
+        list.setAttribute("aria-busy", "true");
+        try {
+          const cacheBuster = new Date().getTime();
+          const response = await fetch(`./races.csv?v=${cacheBuster}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`Serveren svarede med status ${response.status}.`);
+          const text = await response.text();
+          state.races = parseCSV(text);
+          if (!state.races.length) throw new Error("Der blev ikke fundet gyldige løb i CSV-filen.");
+          renderFilters();
+          renderRaces();
+        } catch (error) {
+          console.error("Kunne ikke hente løbskalenderen:", error);
+          count.textContent = "";
+          list.innerHTML = `
+            <div class="status-card" role="alert">
+              <div>
+                <strong>Kalenderen kunne ikke hentes</strong>
+                <p>Kontrollér, at <code>races.csv</code> ligger i samme mappe som <code>index.html</code>, og prøv igen.</p>
+                <button class="retry-btn" type="button">Prøv igen</button>
+              </div>
+            </div>`;
+        } finally {
+          list.setAttribute("aria-busy", "false");
+        }
+      }
+
+      list.addEventListener("click", event => {
+        if (event.target.closest(".retry-btn")) loadRaces();
+      });
+
+      loadRaces();
+    })();
+  </script>
 </body>
 </html>
